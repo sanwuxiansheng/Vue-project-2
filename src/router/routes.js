@@ -4,6 +4,7 @@ import Order from '../pages/Order';
 import Profile from '../pages/Profile';
 import Search from '../pages/Search';
 import Login from '../pages/Login';
+import UserInfo from '../pages/UserInfo';
 // 向外暴露
 export default [
   {
@@ -37,6 +38,10 @@ export default [
   {
     path: '/login',
     component: Login
+  },
+  {
+    path: '/userInfo',
+    component: UserInfo
   },
   {
     path: '/',
