@@ -12,6 +12,9 @@ import './validate'
 import Header from './components/Heard/index.vue'
 import Star from './components/Star'
 import ShopHeard from './components/ShopHeard'
+// 引入并注册使用按钮
+import { Button } from 'mint-ui';
+Vue.component(Button.name, Button);
 Vue.component('Header', Header)
 Vue.component('Star', Star)
 Vue.component('ShopHeard', ShopHeard)
