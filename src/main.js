@@ -11,8 +11,10 @@ import './validate'
 // 定义全局组件
 import Header from './components/Heard/index.vue'
 import Star from './components/Star'
+import ShopHeard from './components/ShopHeard'
 Vue.component('Header', Header)
 Vue.component('Star', Star)
+Vue.component('ShopHeard', ShopHeard)
 Vue.config.productionTip = false
 
 /* eslint-disable no-new */
