@@ -54,7 +54,7 @@
               </section>
             </section>
           </div>
-          <button class="login_submit">登录</button>
+          <button class="login_submit" @click.prevent="login">登录</button>
         </form>
         <a href="javascript:;" class="about_us">关于我们</a>
       </div>
@@ -90,6 +90,7 @@ import {reqPwdLogin, reqSmsLogin, reqSendCode} from '../../api'
       sendCaptcha () {
         this.$refs.captcha.src="http://localhost:5000/captcha?time="+Date.now()
       },
+      // 发送验证码
       async sendCode () {
         this.computeTime = 30
         const timeId = setInterval(() => {
@@ -108,6 +109,40 @@ import {reqPwdLogin, reqSmsLogin, reqSendCode} from '../../api'
           this.computeTime=0
           clearInterval(this.timeId)
           alert(result.msg)
+        }
+      },
+      // 登录
+      async login () {
+        // 判断用户是通过手机号码登录还是用户名密码登录
+        const {loginWay,phone,code,name,pwd,captcha}=this
+        // 定义一个数组,用来存储验证的名字
+        let names
+        if (loginWay) {
+          // 进来了说明是通过手机号码的方式
+          names = ['phone', 'code']
+        } else {
+          // 说明是用户名密码的方式
+          names = ['name', 'pwd', 'captcha']
+        }
+        // 收集表单数据后对所有表单进行验证
+        const success = await this.$validator.validateAll(names) // 对指定的所有表单项进行验证
+        if (success) {
+          // 只有验证通过才能进行登陆
+          // 判断是哪种方式登录
+          let result
+          if (loginWay) {
+            result = await reqSmsLogin(phone, code) 
+          } else {
+            result = await reqPwdLogin({name, pwd, captcha})
+          }
+          if (result.code === 0) {
+            // 请求数据成功进行数据更新
+            const user = result.data
+            this.$store.commit(RECEIVE_USER,user)
+            this.$router.replace('/profile')
+          } else {
+            alert(result.msg)
+          }
         }
       }
     }
