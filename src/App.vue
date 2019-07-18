@@ -8,7 +8,10 @@
 <script>
 import FooterGuide from './components/FooterGuide/FooterGuide'
 // 引入api
-import { reqAddress, reqCategory, reqShops } from '../src/api'
+import {reqUser, reqCategories} from './api'
+import {RECEIVE_USER, RECEIVE_CATEGORIES} from './store/mutation-types.js'
+import Swiper from 'swiper';
+import 'swiper/dist/css/swiper.css';
 export default {
   name: 'App',
   // 注册组件
@@ -16,12 +19,29 @@ export default {
     FooterGuide
   },
   async mounted () {
-    const result1 = await reqAddress("116.36867", "40.10038")
-    console.log(result1);
-    const result2 = await reqCategory()
-    console.log(result2);
-    const result3 = await reqShops("116.36867", "40.10038")
-    console.log(result3);
+    // 发送请求获取用户信息---生成了session---sid----cookie--客户端---cookie(sid)------服务端(sid-----userId)
+    const result = await reqUser()
+    if (result.code === 0) {
+      const user = result.data
+      // console.log(user);
+      this.$store.commit(RECEIVE_USER, user)
+    }
+    const result2 =await reqCategories();
+    if (result2.code === 0) {
+      const categories = result2.data
+      // console.log(user);
+      this.$store.commit(RECEIVE_CATEGORIES, categories)
+    }
+    this.$nextTick(() => {
+      //必须是界面显示后才有效果
+        new Swiper(".swiper-container", {
+        loop: true, // 循环模式选项
+        // 如果需要分页器
+        pagination: {
+          el: ".swiper-pagination"
+        }
+      });
+    })
   }
 }
 </script>
