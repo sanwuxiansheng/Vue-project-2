@@ -12,11 +12,13 @@
         <form>
           <div :class="{on: loginWay}">
             <section class="login_message">
-              <input type="tel" maxlength="11" placeholder="手机号">
-              <button disabled="disabled" class="get_verification">获取验证码</button>
+              <input type="tel" maxlength="11" placeholder="手机号" v-model="phone" name="phone" v-validate="'required|phone'">
+              <span style="color:red" v-show="errors.has('phone')" class="help is-danger">{{ errors.first('phone') }}</span>
+              <button :disabled="!isRightPhone || computeTime > 0" class="get_verification" @click.prevent="sendCode" :class="{right: isRightPhone}">{{computeTime > 0 ? `已发送(${computeTime}s)` : '获取验证码'}}</button>
             </section>
             <section class="login_verification">
-              <input type="tel" maxlength="8" placeholder="验证码">
+              <input type="tel" maxlength="8" placeholder="验证码" v-model="code" name="code" v-validate="'required'">
+              <span style="color:red" v-show="errors.has('code')" class="help is-danger">{{ errors.first('code') }}</span>
             </section>
             <section class="login_hint">
               温馨提示：未注册硅谷外卖帐号的手机号，登录时将自动注册，且代表已同意
@@ -26,17 +28,28 @@
           <div :class="{on: !loginWay}">
             <section>
               <section class="login_message">
-                <input type="tel" maxlength="11" placeholder="手机/邮箱/用户名">
+                <input type="tel" maxlength="11" placeholder="手机/邮箱/用户名" name="name"
+                  v-model="name"
+                  v-validate="'required'">
+                  <span style="color:red" v-show="errors.has('name')" class="help is-danger">{{ errors.first('name') }}</span>
               </section>
               <section class="login_verification">
-                <input type="tel" maxlength="8" placeholder="密码">
-                <div class="switch_button off">
-                  <div class="switch_circle"></div>
-                  <span class="switch_text">...</span>
+                <input :type="isShowPwd ? 'text' : 'password'" maxlength="8" placeholder="密码" name="pwd" v-model="pwd" v-validate="'required'">
+                <span style="color:red" v-show="errors.has('pwd')" class="help is-danger">{{ errors.first('pwd') }}</span>
+                <div class="switch_button" :class="isShowPwd ? 'on' : 'off'" @click="isShowPwd = !isShowPwd">
+                  <div class="switch_circle" :class="{right: isShowPwd}"></div>
+                  <span class="switch_text">{{isShowPwd ? 'abc' : '...'}}</span>
                 </div>
               </section>
               <section class="login_message">
-                <input type="text" maxlength="11" placeholder="验证码">
+                <input type="text" maxlength="11" placeholder="验证码" name="captcha"
+                  v-model="captcha"
+                  v-validate="'required'">
+                  <span
+                  style="color:red"
+                  v-show="errors.has('captcha')"
+                  class="help is-danger"
+                >{{ errors.first('captcha') }}</span>
                 <img ref="captcha" class="get_verification" src="./images/captcha.svg" alt="captcha" @click="sendCaptcha">
               </section>
             </section>
@@ -52,15 +65,50 @@
   </section>
 </template>
 <script>
+import {RECEIVE_USER} from '../../store/mutation-types'
+import {reqPwdLogin, reqSmsLogin, reqSendCode} from '../../api'
   export default {
     data () {
       return {
-        loginWay:true
+        loginWay: true, // 默认值为true手机号码的方式,false:用户名密码的方式
+        phone: '', // 手机号码
+        computeTime: 0, // 发送倒计时
+        code: '', // 验证码
+        name:'', // 用户名
+        pwd:'', // 密码
+        captcha: '', // 图形验证码
+        isShowPwd:false, //默认是不显示明文密码
+      }
+    },
+    // 计算属性
+    computed: {
+      isRightPhone () {
+        return /^[1]([3-9])[0-9]{9}$/.test(this.phone)
       }
     },
     methods: {
       sendCaptcha () {
         this.$refs.captcha.src="http://localhost:5000/captcha?time="+Date.now()
+      },
+      async sendCode () {
+        this.computeTime = 30
+        const timeId = setInterval(() => {
+          this.computeTime--
+          if (this.computeTime < 0) {
+            this.computeTime = 0
+            clearInterval(this.timeId)
+          }
+        }, 1000)
+        // 发送请求发送验证码
+        const result = await reqSendCode(this.phone) 
+        if (result.code === 0) {
+          // 说明验证码发送成功
+          alert('验证码发送成功')
+        } else {
+          this.computeTime=0
+          clearInterval(this.timeId)
+          alert(result.msg)
+        }
       }
     }
   }
@@ -126,6 +174,8 @@
                 color #ccc
                 font-size 14px
                 background transparent
+                &.right
+                  color: black
             .login_verification
               position relative
               margin-top 16px
@@ -165,6 +215,8 @@
                   background #fff
                   box-shadow 0 2px 4px 0 rgba(0,0,0,.1)
                   transition transform .3s
+                  &.right
+                    transform translateX(27px)
             .login_hint
               margin-top 12px
               color #999

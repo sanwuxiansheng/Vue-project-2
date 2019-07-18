@@ -6,6 +6,8 @@ import App from './App'
 import router from './router'
 // 引入状态数据库
 import store from './store/index'
+// 引入表单验证文件
+import './validate'
 // 定义全局组件
 import Header from './components/Heard/index.vue'
 import Star from './components/Star'
